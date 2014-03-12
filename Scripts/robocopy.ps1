@@ -1,4 +1,4 @@
-﻿######copy for PowerShell Scripts.
+﻿######copy for PowerShell Scripts. Copies over the whole folder. 
 robocopy \\global.gsp\data\users\na_users\mauka\PowerShell\AmysScripts c:\Users\mauka\Documents\GitHub\PowerShell\Scripts /MIR
 
 ######copy for important SharePoint Files
