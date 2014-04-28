@@ -8,7 +8,7 @@
 ###################################################
 
 function getSites() {
-    $sites = Get-SPWebApplication http://na-sp13-01| Get-SPSite -Limit ALL | Where-Object {$_.CompatibilityLevel -eq 15 }
+    $sites = Get-SPWebApplication http://gspportalnew | Get-SPSite -Limit ALL | Where-Object {$_.CompatibilityLevel -eq 15 }
     foreach ($site in $sites) {
         $siteColl = $site.Url
         GetFiles $siteColl
@@ -17,7 +17,7 @@ function getSites() {
 
 
 function GetFiles($siteColl) {
-    $devSite = Get-SPWeb http://na-sp13-01/sites/dev
+    $devSite = Get-SPWeb http://gspportalnew/sites/dev
     $colorFile = $devSite.GetFile($devSite.ServerRelativeUrl + "/_catalogs/theme/15/GSPPalette.spcolor")
     $fontFile = $devSite.GetFile($devSite.ServerRelativeUrl + "/_catalogs/theme/15/GSPfonts.spfont")
     $masterFile = $devSite.GetFile($devSite.ServerRelativeUrl + "/_catalogs/masterpage/gsp.master")
@@ -40,10 +40,28 @@ function UploadFiles($siteColl, $colorFile, $fontFile, $masterFile) {
 
     $themeLib.Files.Add($pathForColorAdd, $colorFile.OpenBinary(), $true)
     $themeLib.Files.Add($pathForFontAdd, $fontFile.OpenBinary(), $true)
-    $masterLib.Files.Add($pathForMasterAdd, $masterFile.OpenBinary(), $true).CheckIn("Automatic CheckIn. (Administrator)").Publish("Automatic Publish. (Administrator)")
 
-    #checking in and publishing the copied master page
-    #checkInPublishApproveMaster $masterLib $masterFileName
+    #checkto see if file already exists in masterpagegallery
+    $masterPage = $siteRoot.GetFile($pathForMasterAdd);
+    if ($masterPage.Exists) 
+    {
+        if ($masterPage.LockedByUser -ne $null)
+        {
+            $masterPage.CheckIn("Checked in via PowerShell changeTheme script. -AEM")
+        }
+        $masterPage.CheckOut()
+    }
+
+    $masterLib.Files.Add($pathForMasterAdd, $masterFile.OpenBinary(), $true)
+    $masterPage.CheckIn("Checked in via PowerShell changeTheme script. -AEM")
+    if ($masterPage.ListItem.ListItems.List.EnableMinorVersions)
+    {
+        $masterPage.Publish("Published via PowerShell changeTheme script. -AEM")
+    }
+    if ($masterPage.ListItem.ListItems.List.EnableModeration)
+    {
+        $masterPage.Approve("Approved via PowerShell changeTheme script. -AEM")
+    }
 
     #Note: SetMaster has to be called before ApplyTheme.
     #Otherwise, theme application will block the web.Update() that updates the master page.
@@ -57,30 +75,6 @@ function UploadFiles($siteColl, $colorFile, $fontFile, $masterFile) {
     $site.Dispose()
 }
 
-function checkInPublishApproveMaster ($masterLib, $masterFileName) {
-    $masterPage = $masterLib.Items | Where-Object {$_.Name -eq $masterFileName}
-    Write-Host $masterPage.Name "******"
-
-    <#if(($masterPage -ne $null) -and ($masterPage.LockId -ne $null)) {
-      $masterPage.ReleaseLock($masterPage.LockId)
-    }
-    if( $masterPage.File -ne $null) { $itemFile = $list.GetItemById($masterPage.ID).File }
-    else { $itemFile = $masterLib.GetItemById($masterPage.ID) }
-    
-    if( $itemFile.CheckOutStatus -ne "None" ) { 
-      $itemFile.CheckIn("Automatic CheckIn. (Administrator)")
-      if( $masterPage.File -ne $null) { $itemFile = $masterLib.GetItemById($masterPage.ID).File }
-      else { $itemFile = $masterLib.GetItemById($masterPage.ID) }
-    }
-    if( $masterLib.EnableVersioning -and $masterLib.EnableMinorVersions) { 
-      $itemFile.Publish("Automatic Publish. (Administrator)")
-      if( $masterPage.File -ne $null) { $itemFile = $masterLib.GetItemById($masterPage.ID).File }
-      else { $itemFile = $masterLib.GetItemById($masterPage.ID) }
-    }
-    if( $maserLib.EnableModeration ) { 
-      $itemFile.Approve("Automatic Approve. (Administrator)") 
-    }#>
-}
 
 function ApplyTheme($siteRoot, $web, $colorFileName, $fontFileName){
 
@@ -102,9 +96,9 @@ function SetMaster($siteRoot, $web, $masterFileName){
 
 
 #Use this to loop through the whole farm
-#getSites
+getSites
 
 #Use this to update one specific site collection
-GetFiles "http://na-sp13-01/sites/rungsp"
+#GetFiles "http://gspportalnew/sites/SearchCenterDev"
 
 Write-Host "The script is done running. Party on."
