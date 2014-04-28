@@ -9,7 +9,11 @@ $filesToCopy = @( #folder should be path to site name. If folder does not exist,
     @{source="\\na-sp13-01\sites\dev\_catalogs\theme\15"; name="GSPPalette.spcolor"; folder="\sites-dev"},
     @{source="\\na-sp13-01\sites\dev\_catalogs\theme\15"; name="GSPFonts.spfont"; folder="\sites-dev"},
     @{source="\\na-sp13-01\sites\dev\Style Library"; name="zzz-GSPcustom.css"; folder="\sites-dev"},
-    @{source="\\na-sp13-01\sites\dev\Scripts"; name="gspCustom.js"; folder="\sites-dev"}
+    @{source="\\na-sp13-01\sites\dev\Scripts"; name="gspCustom.js"; folder="\sites-dev"},
+    
+    #stuff that I messed with during the upgrade. Re-import these after the content DB is re-attached. 
+    @{source="\\na-sp13-01\sites\it\SiteAssets\sitediretory.js"; name="gspCustom.js"; folder="\sites-it"}
+    
 );
 foreach ($file in $filesToCopy) {
     $realDestination = $destination+$file.folder
